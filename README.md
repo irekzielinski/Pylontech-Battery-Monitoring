@@ -3,7 +3,7 @@
 This project allows you to control and monitor Pylontech US2000B batteries via console port over WiFi.
 It it's a great starting point to integrate battery with your home automation.
 
-** I ACCEPT NO RESPONSIBILTY FOR ANY DAMAGE CAUSED, PROCEED AT YOUR OWN RISK **
+**I ACCEPT NO RESPONSIBILTY FOR ANY DAMAGE CAUSED, PROCEED AT YOUR OWN RISK**
 
 # Features:
   * Low cost (around 20$ in total).
@@ -13,10 +13,11 @@ It it's a great starting point to integrate battery with your home automation.
     * battery information can be retrevied also in JSON format for easy parsing
   * Easy to modify code using Arduino IDE and flash new firmware over WiFi (no need to disconnect from the battery).
 
-See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU):
+See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU):</br>
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=7VyQjKU3MsU" target="_blank"><img src="http://img.youtube.com/vi/7VyQjKU3MsU/0.jpg" alt="See the project in action on YouTube" width="240" height="180" border="10" /></a>
 
-# Parts needed:
+
+# Parts needed and schematics:
   * [Wemos D1 mini microcontroller](https://www.amazon.co.uk/Makerfire-NodeMcu-Development-ESP8266-Compatible/dp/B071S8MWTY/).
   * [SparkFun MAX3232 Transceiver](https://www.sparkfun.com/products/11189).
   * Cable with RJ10 connector (some RJ10 cables have only two wires, make sure to buy one that has all four wires present).
