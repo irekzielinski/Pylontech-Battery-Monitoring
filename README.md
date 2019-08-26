@@ -35,3 +35,5 @@ How to get going:
 - You should be able now to connunicate with the battery via WiFi
 
 See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/7VyQjKU3MsU" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
