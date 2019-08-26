@@ -14,8 +14,7 @@ It it's a great starting point to integrate battery with your home automation.
   * Easy to modify code using Arduino IDE and flash new firmware over WiFi (no need to disconnect from the battery).
 
 See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU):
-[![See the project in action on YouTube](https://img.youtube.com/vi/7VyQjKU3MsU/0.jpg)](https://www.youtube.com/watch?v=7VyQjKU3MsU)
-
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=7VyQjKU3MsU" target="_blank"><img src="http://img.youtube.com/vi/7VyQjKU3MsU/0.jpg" alt="See the project in action on YouTube" width="240" height="180" border="10" /></a>
 
 # Parts needed:
   * [Wemos D1 mini microcontroller](https://www.amazon.co.uk/Makerfire-NodeMcu-Development-ESP8266-Compatible/dp/B071S8MWTY/).
