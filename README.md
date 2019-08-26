@@ -13,6 +13,9 @@ Features:
     * battery information can be retrevied also in JSON format for easy parsing
 - Easy to modify code using Arduino IDE and flash new firmware over WiFi (no need to disconnect from the battery).
 
+See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU):
+[![See the project in action on YouTube](https://img.youtube.com/vi/7VyQjKU3MsU/1.jpg)](https://www.youtube.com/watch?v=7VyQjKU3MsU)
+
 Parts needed:
 - [Wemos D1 mini microcontroller](https://www.amazon.co.uk/Makerfire-NodeMcu-Development-ESP8266-Compatible/dp/B071S8MWTY/).
 - [SparkFun MAX3232 Transceiver](https://www.sparkfun.com/products/11189).
@@ -33,8 +36,3 @@ How to get going:
 - Connect Wemos D1 to the power via USB
 - Find what IP address was assigned to your Wemos by your router and open it in the web-browser
 - You should be able now to connunicate with the battery via WiFi
-
-See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU)
-
-[![See the project in action on YouTube](https://img.youtube.com/vi/7VyQjKU3MsU/0.jpg)](https://www.youtube.com/watch?v=7VyQjKU3MsU)
-
