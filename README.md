@@ -33,3 +33,5 @@ How to get going:
 - Connect Wemos D1 to the power via USB
 - Find what IP address was assigned to your Wemos by your router and open it in the web-browser
 - You should be able now to connunicate with the battery via WiFi
+
+See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU)
