@@ -30,6 +30,7 @@ See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU):</br>
   * Get Wemos D1 mini
   * Install arduino IDE and ESP8266 libraries as [described here](https://averagemaker.com/2018/03/wemos-d1-mini-setup.html)
   * Open [PylontechMonitoring.ino](PylontechMonitoring.ino) in arduino IDE
+  * Make sure to copy content of [libraries subdirectory](libraries) to [libraries of your Arduino IDE](https://forum.arduino.cc/index.php?topic=88380.0).
   * Specify your WiFi login and password at the top of the file (line 13-14)
   * Upload project to your device
   * Connect Wemos D1 mini to the MAX3232 transreceiver
