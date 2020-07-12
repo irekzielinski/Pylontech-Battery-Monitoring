@@ -11,6 +11,8 @@ It it's a great starting point to integrate battery with your home automation.
   * Device exposes web interface that allows to:
     * send console commands and read response over WiFi (no PC needed)
     * battery information can be retrevied also in JSON format for easy parsing
+  * MQTT support:
+    * device pushes basic battery data like SOC, temperature, state, etc to selected MQTT server
   * Easy to modify code using Arduino IDE and flash new firmware over WiFi (no need to disconnect from the battery).
 
 See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU):</br>
@@ -32,6 +34,7 @@ See the project in action on [Youtube](https://youtu.be/7VyQjKU3MsU):</br>
   * Open [PylontechMonitoring.ino](PylontechMonitoring.ino) in arduino IDE
   * Make sure to copy content of [libraries subdirectory](libraries) to [libraries of your Arduino IDE](https://forum.arduino.cc/index.php?topic=88380.0).
   * Specify your WiFi login and password at the top of the file (line 13-14)
+  * If you want MQTT support, uncomment line 17 and fill details in lines 21-24
   * Upload project to your device
   * Connect Wemos D1 mini to the MAX3232 transreceiver
   * Connect transreceiver to RJ10 as descibed in the schematics (all three lines need to be connected)
