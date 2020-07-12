@@ -9,9 +9,26 @@
 #include <circular_log.h>
 
 
-//Specify your WIFI settings:
+//IMPORTANT: Specify your WIFI settings:
 #define WIFI_SSID "--YOUR SSID HERE --"
 #define WIFI_PASS "-- YOUR PASSWORD HERE --"
+
+//IMPORTANT: Uncomment this line if you want to enable MQTT (and fill correct MQTT_ values below):
+//#define ENABLE_MQTT
+
+#ifdef ENABLE_MQTT
+//NOTE: if you want to change what is pushed via MQTT - edit function: pushBatteryDataToMqtt.
+#define MQTT_SERVER        "192.168.0.6"
+#define MQTT_PORT          1883
+#define MQTT_USER          ""
+#define MQTT_PASSWORD      ""
+#define MQTT_TOPIC_ROOT    "home/grid_battery/"  //this is where mqtt data will be pushed
+#define MQTT_PUSH_FREQ_SEC 2  //maximum mqtt update frequency in seconds
+
+#include <PubSubClient.h>
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
+#endif //ENABLE_MQTT
 
 char g_szRecvBuff[7000];
 
@@ -59,6 +76,10 @@ void setup() {
   server.begin(); 
   
   syncTime();
+
+#ifdef ENABLE_MQTT
+  mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
+#endif
 
   Log("Boot event");
 }
@@ -620,6 +641,10 @@ void prepareJsonOutput(char* pBuff, int buffSize)
 }
 
 void loop() {
+#ifdef ENABLE_MQTT
+  mqttLoop();
+#endif
+  
   ArduinoOTA.handle();
   server.handleClient();
   timer.run();
@@ -646,3 +671,87 @@ void loop() {
     }
   }
 }
+
+#ifdef ENABLE_MQTT
+#define ABS_DIFF(a, b) (a > b ? a-b : b-a)
+void mqtt_publish_f(const char* topic, float newValue, float oldValue, float minDiff, bool force)
+{
+  char szTmp[16] = "";
+  snprintf(szTmp, 15, "%.2f", newValue);
+  if(force || ABS_DIFF(newValue, oldValue) > minDiff)
+  {
+    mqttClient.publish(topic, szTmp, false);
+  }
+}
+
+void mqtt_publish_i(const char* topic, int newValue, int oldValue, int minDiff, bool force)
+{
+  char szTmp[16] = "";
+  snprintf(szTmp, 15, "%d", newValue);
+  if(force || ABS_DIFF(newValue, oldValue) > minDiff)
+  {
+    mqttClient.publish(topic, szTmp, false);
+  }
+}
+
+void mqtt_publish_s(const char* topic, const char* newValue, const char* oldValue, bool force)
+{
+  if(force || strcmp(newValue, oldValue) != 0)
+  {
+    mqttClient.publish(topic, newValue, false);
+  }
+}
+
+void pushBatteryDataToMqtt(const batteryStack& lastSentData, bool forceUpdate /* if true - we will send all data regardless if it's the same */)
+{
+  mqtt_publish_f(MQTT_TOPIC_ROOT "soc",          g_stack.soc,                lastSentData.soc,                0, forceUpdate);
+  mqtt_publish_f(MQTT_TOPIC_ROOT "temp",         (float)g_stack.temp/1000.0, (float)lastSentData.temp/1000.0, 0, forceUpdate);
+  mqtt_publish_i(MQTT_TOPIC_ROOT "estPowerAC",   g_stack.getEstPowerAc(),    lastSentData.getEstPowerAc(),   10, forceUpdate);
+  mqtt_publish_i(MQTT_TOPIC_ROOT "battery_count",g_stack.batteryCount,       lastSentData.batteryCount,       0, forceUpdate);
+  mqtt_publish_s(MQTT_TOPIC_ROOT "base_state",   g_stack.baseState,          lastSentData.baseState            , forceUpdate);
+  mqtt_publish_i(MQTT_TOPIC_ROOT "is_normal",    g_stack.isNormal() ? 1:0,   lastSentData.isNormal() ? 1:0,   0, forceUpdate);
+}
+
+void mqttLoop()
+{
+  //if we have problems with connecting to mqtt server, we will attempt to re-estabish connection each 1minute (not more than that)
+  static unsigned long g_lastConnectionAttempt = 0;
+
+  //first: let's make sure we are connected to mqtt
+  const char* topicLastWill = MQTT_TOPIC_ROOT "availability";
+  if (!mqttClient.connected() && (g_lastConnectionAttempt == 0 || os_getCurrentTimeSec() - g_lastConnectionAttempt > 60)) {
+    if(mqttClient.connect("GarageBattery", MQTT_USER, MQTT_PASSWORD, topicLastWill, 1, true, "offline"))
+    {
+      Log("Connected to MQTT server: " MQTT_SERVER);
+      mqttClient.publish(topicLastWill, "online", true);
+    }
+    else
+    {
+      Log("Failed to connect to MQTT server.");
+    }
+
+    g_lastConnectionAttempt = os_getCurrentTimeSec();
+  }
+
+  //next: read data from battery and send via MQTT (but only once per MQTT_PUSH_FREQ_SEC seconds)
+  static unsigned long g_lastDataSent = 0;
+  if(mqttClient.connected() && 
+     os_getCurrentTimeSec() - g_lastDataSent > MQTT_PUSH_FREQ_SEC &&
+     sendCommandAndReadSerialResponse("pwr") == true)
+  {
+    static batteryStack lastSentData; //this is the last state we sent to MQTT, used to prevent sending the same data over and over again
+    
+    parsePwrResponse(g_szRecvBuff);
+    prepareJsonOutput(g_szRecvBuff, sizeof(g_szRecvBuff));
+
+    bool forceUpdate = (g_lastDataSent == 0) || (millis() % 20 == 0); //push all the data every 20th call
+    pushBatteryDataToMqtt(lastSentData, forceUpdate);
+    
+    g_lastDataSent = os_getCurrentTimeSec();
+    memcpy(&lastSentData, &g_stack, sizeof(batteryStack));
+  }
+  
+  mqttClient.loop();
+}
+
+#endif //ENABLE_MQTT
