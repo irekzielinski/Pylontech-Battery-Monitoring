@@ -740,13 +740,15 @@ void mqttLoop()
      sendCommandAndReadSerialResponse("pwr") == true)
   {
     static batteryStack lastSentData; //this is the last state we sent to MQTT, used to prevent sending the same data over and over again
+    static unsigned int callCnt = 0;
     
     parsePwrResponse(g_szRecvBuff);
     prepareJsonOutput(g_szRecvBuff, sizeof(g_szRecvBuff));
 
-    bool forceUpdate = (g_lastDataSent == 0) || (millis() % 20 == 0); //push all the data every 20th call
+    bool forceUpdate = (callCnt % 20 == 0); //push all the data every 20th call
     pushBatteryDataToMqtt(lastSentData, forceUpdate);
     
+    callCnt++;
     g_lastDataSent = os_getCurrentTimeSec();
     memcpy(&lastSentData, &g_stack, sizeof(batteryStack));
   }
