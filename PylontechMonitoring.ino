@@ -17,7 +17,8 @@
 //#define ENABLE_MQTT
 
 #ifdef ENABLE_MQTT
-//NOTE: if you want to change what is pushed via MQTT - edit function: pushBatteryDataToMqtt.
+//NOTE 1: if you want to change what is pushed via MQTT - edit function: pushBatteryDataToMqtt.
+//NOTE 2: MQTT_TOPIC_ROOT is where battery will push MQTT topics. For example "soc" will be pushed to: "home/grid_battery/soc"
 #define MQTT_SERVER        "192.168.0.6"
 #define MQTT_PORT          1883
 #define MQTT_USER          ""
@@ -360,15 +361,18 @@ struct pylonBattery
   char b_v_st[9];       //Normal  (battery voltage?)
   char b_t_st[9];       //Normal  (battery temperature?)
 
-  bool isCharging()    const { return strcmp(baseState, "Charge") == 0; }
-  bool isDischarging() const { return strcmp(baseState, "Dischg") == 0; }
-  bool isIdle()        const { return strcmp(baseState, "Idle") == 0; }
+  bool isCharging()    const { return strcmp(baseState, "Charge")   == 0; }
+  bool isDischarging() const { return strcmp(baseState, "Dischg")   == 0; }
+  bool isIdle()        const { return strcmp(baseState, "Idle")     == 0; }
+  bool isBalancing()   const { return strcmp(baseState, "Ballance") == 0; } //note spelling (double ll)
+  
 
   bool isNormal() const
   {
     if(isCharging()    == false &&
        isDischarging() == false &&
-       isIdle()        == false)
+       isIdle()        == false &&
+       isBalancing()   == false)
     {
       return false; //base state looks wrong!
     }
