@@ -364,7 +364,7 @@ struct pylonBattery
   bool isCharging()    const { return strcmp(baseState, "Charge")   == 0; }
   bool isDischarging() const { return strcmp(baseState, "Dischg")   == 0; }
   bool isIdle()        const { return strcmp(baseState, "Idle")     == 0; }
-  bool isBalancing()   const { return strcmp(baseState, "Ballance") == 0; } //note spelling (double ll)
+  bool isBalancing()   const { return strcmp(baseState, "Balance")  == 0; }
   
 
   bool isNormal() const
@@ -392,7 +392,7 @@ struct batteryStack
   int temp; //in mC, if highest temp is > 15C, this will show the highest temp, otherwise the lowest
   long currentDC;    //mAh current going in or out of the battery
   long avgVoltage;    //in mV
-  char baseState[9];  //Charge | Dischg | Idle | Ballance | Alarm!
+  char baseState[9];  //Charge | Dischg | Idle | Balance | Alarm!
 
   pylonBattery batts[MAX_PYLON_BATTERIES];
 
@@ -623,7 +623,7 @@ bool parsePwrResponse(const char* pStr)
   }
   else
   {
-    strcpy(g_stack.baseState, "Ballance");
+    strcpy(g_stack.baseState, "Balance");
   }
 
 
@@ -747,7 +747,6 @@ void mqttLoop()
     static unsigned int callCnt = 0;
     
     parsePwrResponse(g_szRecvBuff);
-    prepareJsonOutput(g_szRecvBuff, sizeof(g_szRecvBuff));
 
     bool forceUpdate = (callCnt % 20 == 0); //push all the data every 20th call
     pushBatteryDataToMqtt(lastSentData, forceUpdate);
