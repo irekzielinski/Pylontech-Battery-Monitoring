@@ -508,7 +508,48 @@ Command completed successfully
 $$
 
 pylon
+
+---- us5000 Soft  version V2.3:
+Power Volt   Curr   Tempr  Tlow   Tlow.Id  Thigh  Thigh.Id Vlow   Vlow.Id  Vhigh  Vhigh.Id Base.St  Volt.St  Curr.St  Temp.St  Coulomb  Time                 B.V.St   B.T.St  MosTempr M.T.St   SysAlarm.St
+1     49435  0      9900   7500   8        8000   12       3295   1        3296   0        Idle     Normal   Normal   Normal   60%      2025-12-24 17:33:57  Normal   Normal  9400     Normal   Normal  
+2     -      -      -      -      -      -      -      Absent   -        -        -        -        -                    -        -       
+
 */
+int findOffset(const char *pStr, const char *param)
+{
+    const char *lineStart = pStr;
+
+    while (*lineStart) {
+        /* Find end of current line */
+        const char *lineEnd = strchr(lineStart, '\n');
+        if (!lineEnd)
+            lineEnd = lineStart + strlen(lineStart);
+
+        /* Check if line starts with "Power" */
+        if (strncmp(lineStart, "Power", 5) == 0) {
+            const char *pos = strstr(lineStart, param);
+            if (pos && pos < lineEnd) {
+                return (int)(pos - lineStart);
+            }
+            return -1; /* Parameter not found */
+        }
+
+        /* Move to next line */
+        if (*lineEnd == '\0')
+            break;
+        lineStart = lineEnd + 1;
+    }
+
+    return -1; /* "Power" line not found */
+}
+
+#define DECL_FIND_OFFSET_OR_FAIL(var, str, key)   \
+    int var = findOffset((str), (key));           \
+    if ((var) == -1) {                            \
+        Log(key " not found");                    \
+        return false;                             \
+    }
+
 bool parsePwrResponse(const char* pStr)
 {
   if(strstr(pStr, "Command completed successfully") == NULL)
@@ -527,6 +568,22 @@ bool parsePwrResponse(const char* pStr)
 
   memset(&g_stack, 0, sizeof(g_stack));
 
+  DECL_FIND_OFFSET_OR_FAIL(offset1,  pStr,"Base.St");
+  DECL_FIND_OFFSET_OR_FAIL(offset2,  pStr,"Volt.St");
+  DECL_FIND_OFFSET_OR_FAIL(offset3,  pStr,"Curr.St");
+  DECL_FIND_OFFSET_OR_FAIL(offset4,  pStr,"Temp.St");
+  DECL_FIND_OFFSET_OR_FAIL(offset5,  pStr,"Time");
+  DECL_FIND_OFFSET_OR_FAIL(offset6,  pStr,"B.V.St");
+  DECL_FIND_OFFSET_OR_FAIL(offset7,  pStr,"B.T.St");
+  DECL_FIND_OFFSET_OR_FAIL(offset8,  pStr,"Volt "); //extra space not to confuse with Volt.St
+  DECL_FIND_OFFSET_OR_FAIL(offset9,  pStr,"Curr ");
+  DECL_FIND_OFFSET_OR_FAIL(offset10, pStr,"Tempr ");
+  DECL_FIND_OFFSET_OR_FAIL(offset11, pStr,"Tlow ");
+  DECL_FIND_OFFSET_OR_FAIL(offset12, pStr,"Thigh ");
+  DECL_FIND_OFFSET_OR_FAIL(offset13, pStr,"Vlow ");
+  DECL_FIND_OFFSET_OR_FAIL(offset14, pStr,"Vhigh ");    
+  DECL_FIND_OFFSET_OR_FAIL(offset15, pStr,"Coulomb ");
+  
   for(int ix=0; ix<MAX_PYLON_BATTERIES; ix++)
   {
     char szToFind[32] = "";
@@ -538,30 +595,35 @@ bool parsePwrResponse(const char* pStr)
       return false;
     }
 
-    pLineStart += 3; //move past \r\r\n
-
-    extractStr(pLineStart, 55, g_stack.batts[ix].baseState, sizeof(g_stack.batts[ix].baseState));
-    if(strcmp(g_stack.batts[ix].baseState, "Absent") == 0)
+    //US5000 and US2000 show "Absent" field at the same posion
+    //For US2000 this matches "Base.St" column, for US5000 it does not match any column
+    if (strncmp(pLineStart + 55, "Absent", 6) == 0)
     {
+      strcpy(g_stack.batts[ix].baseState, "Absent");
       g_stack.batts[ix].isPresent = false;
     }
     else
     {
+      extractStr(pLineStart, offset1, g_stack.batts[ix].baseState, sizeof(g_stack.batts[ix].baseState));
       g_stack.batts[ix].isPresent = true;
-      extractStr(pLineStart, 64, g_stack.batts[ix].voltageState, sizeof(g_stack.batts[ix].voltageState));
-      extractStr(pLineStart, 73, g_stack.batts[ix].currentState, sizeof(g_stack.batts[ix].currentState));
-      extractStr(pLineStart, 82, g_stack.batts[ix].tempState, sizeof(g_stack.batts[ix].tempState));
-      extractStr(pLineStart, 100, g_stack.batts[ix].time, sizeof(g_stack.batts[ix].time));
-      extractStr(pLineStart, 121, g_stack.batts[ix].b_v_st, sizeof(g_stack.batts[ix].b_v_st));
-      extractStr(pLineStart, 130, g_stack.batts[ix].b_t_st, sizeof(g_stack.batts[ix].b_t_st));
-      g_stack.batts[ix].voltage = extractInt(pLineStart, 6);
-      g_stack.batts[ix].current = extractInt(pLineStart, 13);
-      g_stack.batts[ix].tempr   = extractInt(pLineStart, 20);
-      g_stack.batts[ix].cellTempLow    = extractInt(pLineStart, 27);
-      g_stack.batts[ix].cellTempHigh   = extractInt(pLineStart, 34);
-      g_stack.batts[ix].cellVoltLow    = extractInt(pLineStart, 41);
-      g_stack.batts[ix].cellVoltHigh   = extractInt(pLineStart, 48);
-      g_stack.batts[ix].soc            = extractInt(pLineStart, 91);
+    }
+
+    if(g_stack.batts[ix].isPresent)
+    {
+      extractStr(pLineStart, offset2, g_stack.batts[ix].voltageState, sizeof(g_stack.batts[ix].voltageState));
+      extractStr(pLineStart, offset3, g_stack.batts[ix].currentState, sizeof(g_stack.batts[ix].currentState));
+      extractStr(pLineStart, offset4, g_stack.batts[ix].tempState, sizeof(g_stack.batts[ix].tempState));
+      extractStr(pLineStart, offset5, g_stack.batts[ix].time, sizeof(g_stack.batts[ix].time));
+      extractStr(pLineStart, offset6, g_stack.batts[ix].b_v_st, sizeof(g_stack.batts[ix].b_v_st));
+      extractStr(pLineStart, offset7, g_stack.batts[ix].b_t_st, sizeof(g_stack.batts[ix].b_t_st));
+      g_stack.batts[ix].voltage = extractInt(pLineStart, offset8);
+      g_stack.batts[ix].current = extractInt(pLineStart, offset9);
+      g_stack.batts[ix].tempr   = extractInt(pLineStart, offset10);
+      g_stack.batts[ix].cellTempLow    = extractInt(pLineStart, offset11);
+      g_stack.batts[ix].cellTempHigh   = extractInt(pLineStart, offset12);
+      g_stack.batts[ix].cellVoltLow    = extractInt(pLineStart, offset13);
+      g_stack.batts[ix].cellVoltHigh   = extractInt(pLineStart, offset14);
+      g_stack.batts[ix].soc            = extractInt(pLineStart, offset15);
 
       //////////////////////////////// Post-process ////////////////////////
       g_stack.batteryCount++;
@@ -587,13 +649,15 @@ bool parsePwrResponse(const char* pStr)
         if(tempHigh < g_stack.batts[ix].cellTempHigh){tempHigh = g_stack.batts[ix].cellTempHigh;}
         if(tempLow > g_stack.batts[ix].cellTempLow){tempLow = g_stack.batts[ix].cellTempLow;}
       }
-      
     }
   }
 
   //now update stack state:
-  g_stack.avgVoltage /= g_stack.batteryCount;
-  g_stack.soc = socLow;
+  if(g_stack.batteryCount > 0)
+  {  
+    g_stack.avgVoltage /= g_stack.batteryCount;
+    g_stack.soc = socLow;
+  }
 
   if(tempHigh > 15000) //15C
   {
