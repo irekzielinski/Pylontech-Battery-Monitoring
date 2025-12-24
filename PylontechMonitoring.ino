@@ -595,6 +595,8 @@ bool parsePwrResponse(const char* pStr)
       return false;
     }
 
+    pLineStart += 3; //move past \r\r\n    
+    
     //US5000 and US2000 show "Absent" field at the same posion
     //For US2000 this matches "Base.St" column, for US5000 it does not match any column
     if (strncmp(pLineStart + 55, "Absent", 6) == 0)
